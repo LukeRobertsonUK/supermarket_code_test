@@ -23,8 +23,4 @@ co.scan(strawberries)
 co.scan(fruit_tea)
 co.scan(coffee)
 
-
 puts co.total
-
-
-# co.rule_to_apply(fruit_tea)

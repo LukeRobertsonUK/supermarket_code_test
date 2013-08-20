@@ -12,25 +12,33 @@ class Checkout
     @items[item] += 1
   end
 
+  def quantity(pricing_rule)
+    @items[pricing_rule.item]
+  end
+
+  def normal_price(pricing_rule)
+    pricing_rule.item.rrp
+  end
+
+
   def total
     total = 0
     @pricing_rules.each do |pricing_rule|
-      rrp = pricing_rule.item.rrp
       batch_total = case pricing_rule.deal
-        when :normal_price
-          pricing_rule.item.rrp * @items[pricing_rule.item]
         when :bulk_discount
-          if @items[pricing_rule.item] > pricing_rule.number_before_discount_applies
-            pricing_rule.item.rrp * @items[pricing_rule.item] * (1 - pricing_rule.discount)
+          if quantity(pricing_rule) > pricing_rule.number_before_discount_applies
+            normal_price(pricing_rule) * quantity(pricing_rule) * (1 - pricing_rule.discount)
           else
-            pricing_rule.item.rrp * @items[pricing_rule.item]
+            normal_price(pricing_rule) * quantity(pricing_rule)
           end
         when :bogof
-          if @items[pricing_rule.item].even?
-            (pricing_rule.item.rrp * @items[pricing_rule.item])/2
+          if quantity(pricing_rule).even?
+            (normal_price(pricing_rule) * quantity(pricing_rule))/2
           else
-            (pricing_rule.item.rrp * (1 + @items[pricing_rule.item]))/2
+            (normal_price(pricing_rule) * (1+quantity(pricing_rule)))/2
           end
+        else
+          normal_price(pricing_rule) * quantity(pricing_rule)
         end
         total += batch_total
       end
