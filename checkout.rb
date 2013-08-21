@@ -5,46 +5,51 @@ class Checkout
   def initialize(pricing_rules)
     @pricing_rules = pricing_rules
     @items = {}
-    pricing_rules.each {|rule| @items[rule.item] = 0}
   end
 
   def scan(item)
-    @items[item] += 1
+    @items[item] ? (@items[item] += 1) : (@items[item] = 1)
   end
 
-  def quantity(pricing_rule)
-    @items[pricing_rule.item]
+  def number(item)
+    @items[item]
   end
 
-  def normal_price(pricing_rule)
-    pricing_rule.item.rrp
+  def rule_for(item)
+    @pricing_rules.find{|rule| rule.item == item}
   end
 
+  def sub_total(item)
+    item.rrp * number(item)
+  end
+
+  def sub_total_bogoff(item)
+    number(item).even? ? ( (sub_total(item))/2 ): (item.rrp * (number(item) + 1)/2)
+  end
+
+  def sub_total_bulk_discount(item)
+    if number(item) > rule_for(item).number_before_discount_applies
+      item.rrp * number(item) * (1 - rule_for(item).discount)
+    else
+      sub_total(item)
+    end
+  end
+
+  def batch_total(item)
+    if rule_for(item)
+      return case rule_for(item).deal
+      when :bogof then sub_total_bogoff(item)
+      when :bulk_discount then sub_total_bulk_discount(item)
+      end
+    else
+      return sub_total(item)
+    end
+  end
 
   def total
-    total = 0
-    @pricing_rules.each do |pricing_rule|
-      batch_total = case pricing_rule.deal
-        when :bulk_discount
-          if quantity(pricing_rule) > pricing_rule.number_before_discount_applies
-            normal_price(pricing_rule) * quantity(pricing_rule) * (1 - pricing_rule.discount)
-          else
-            normal_price(pricing_rule) * quantity(pricing_rule)
-          end
-        when :bogof
-          if quantity(pricing_rule).even?
-            (normal_price(pricing_rule) * quantity(pricing_rule))/2
-          else
-            (normal_price(pricing_rule) * (1+quantity(pricing_rule)))/2
-          end
-        else
-          normal_price(pricing_rule) * quantity(pricing_rule)
-        end
-        total += batch_total
-      end
-    total
-    end
-
+    @items.inject(0){ |sum, item| sum + batch_total(item[0]) }
   end
+
+end
 
 
