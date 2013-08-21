@@ -18,10 +18,10 @@ pricing_rules = [
 co = Checkout.new(pricing_rules)
 
 # scan the goods
-co.scan(strawberries)
-co.scan(strawberries)
 co.scan(fruit_tea)
 co.scan(strawberries)
+co.scan(fruit_tea)
+co.scan(coffee)
 
 # get the total
 puts co.total

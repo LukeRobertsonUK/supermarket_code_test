@@ -35,19 +35,19 @@ class Checkout
     end
   end
 
-  def batch_total(item)
-    if rule_for(item)
-      return case rule_for(item).deal
-      when :bogof then sub_total_bogoff(item)
-      when :bulk_discount then sub_total_bulk_discount(item)
-      end
-    else
-      return sub_total(item)
+  def process_discount(item)
+    return case rule_for(item).deal
+    when :bogof then sub_total_bogoff(item)
+    when :bulk_discount then sub_total_bulk_discount(item)
     end
   end
 
+  def batch_total(item)
+    rule_for(item) ? process_discount(item) : sub_total(item)
+  end
+
   def total
-    @items.inject(0){ |sum, item| sum + batch_total(item[0]) }
+    @items.inject(0){ |sum, (item, number)| sum + batch_total(item) }
   end
 
 end
